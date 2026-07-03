@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -N HISAT2_alignment
+#PBS -l select=1:ncpus=16:mem=64gb,walltime=11:59:00
+#PBS -j oe
+#PBS -m ae
+#PBS -M zID@unsw.edu.au
+#PBS -J 0-578
+
+PARAMS=(SCZD+CNTRL)
+
+cd /srv/scratch/DIR/HISAT2_alignment
+
+module load hisat2/2.2.1
+
+hisat2 -p 16 --dta -x /srv/scratch/DIR/HISAT2_index/UCSC_hg38 -1 /srv/scratch/DIR/Trimmomatic/${PARAMS[$PBS_ARRAY_INDEX]}_R1_001_paired.fastq.gz -2 /srv/scratch/DIR/Trimmomatic/${PARAMS[$PBS_ARRAY_INDEX]}_R2_001_paired.fastq.gz -S ./hisat_${PARAMS[$PBS_ARRAY_INDEX]}.sam --summary-file ./hisat_${PARAMS[$PBS_ARRAY_INDEX]}_summary.txt
