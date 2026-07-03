@@ -1,6 +1,6 @@
 # can wget CIRI3 from Zheng et al.'s (2025) paper
 
-# ! if the SCZD and CNTRL are done separately and into different directories, the number of circRNAs found per tool can be found !
+# ! if the SCZD and CNTRL are done separately over 2 scripts into different directories (i.e. SCZD / CNTRL), the number of circRNAs found per tool can be found !
 
 #!/bin/bash
 #PBS -N CIRI3
