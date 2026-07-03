@@ -1,0 +1,114 @@
+# made a "permuted_all_combined.txt which is all of the identified geneIDs from common_circRNA_* files 
+
+##### in Katana on Demand #####
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
+setwd("/srv/scratch/DIR/all_merge_wavg")
+
+if(length(args) < 1){
+  stop("Need sample ID")
+}
+
+sampleID <- args[1]
+common_files   <- paste0("common_circ_", sampleID, "_withAvg.txt")
+cat("Reading:", common_files, "\n")
+CF   <- read.csv(common_files, sep="\t", header=TRUE)
+common <- merge(common_files, by="circRNA_ID")
+
+write.table(common, file=paste0("combined_all_merged.txt"), sep="\t", quote=F, row.names = FALSE)
+
+### on Sublime Text - permuted lines and saved on desktop
+
+##########################################################
+
+##### using Rstudio on personal device #####
+
+##### R SCRIPT #####
+
+install.packages('BiocManager')
+install.packages('devtools')
+BiocManager::install("AnnotationHub", force = TRUE, dependencies = TRUE)
+BiocManager::install("KEGGREST")
+BiocManager::install("HDO.db")
+BiocManager::install("DOSE", force = TRUE, dependencies = TRUE)
+BiocManager::install("GO.db")
+BiocManager::install("clusterProfiler", force = TRUE, dependencies = TRUE)
+BiocManager::install("AnnotationDbi")
+BiocManager::install("org.Hs.eg.db", force = TRUE)
+BiocManager::install("ggnewscale", force = TRUE)
+BiocManager::install("ggplot2", force = TRUE)
+library(AnnotationHub)
+library(DOSE)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(enrichplot)
+library(ggnewscale)
+library(ggplot2)
+library(enrichplot)
+library(igraph)
+keytypes(org.Hs.eg.db)
+
+setwd("/Users/path/Desktop/circular_SCZD_CNTRL")
+
+#**** brain_gene_symbols****
+brain_genes = read.csv(file="permuted_all_combined.txt", header = FALSE)
+
+brain <- as.vector(brain_genes$V1)
+list.brain <- bitr(brain,
+                   fromType = 'SYMBOL',
+                   toType = 'ENTREZID',
+                   OrgDb = 'org.Hs.eg.db')
+
+brain_genes_pathway <- enrichGO(list.brain$SYMBOL,keyType="SYMBOL",
+                                OrgDb = org.Hs.eg.db,
+                                ont = 'BP',
+                                pAdjustMethod = 'BH',
+                                pvalueCutoff = 0.01,
+                                qvalueCutoff = 0.5)
+head(brain_genes_pathway)
+barplot(brain_genes_pathway, drop=TRUE, showCategory = 20, font.size = 5)
+dotplot(brain_genes_pathway, showCategory = 20, font.size = 5)
+brain_genes_pathway2 <- pairwise_termsim(brain_genes_pathway)
+emapplot(brain_genes_pathway2, showCategory = 20, color = "p.adjust") +
+  ggplot2::theme(legend.text = ggplot2::element_text(size = 10),
+                 text = ggplot2::element_text(size = 10))
+
+emapplot_pairwise(brain_genes_pathway2, 
+                  showCategory = 20, 
+                  color = "p.adjust", 
+                  layout = "kk",
+                  cex_label_category = 1,
+                  repel = TRUE)
+
+emapplot_pairwise(brain_genes_pathway2, showCategory = 20, color = "p.adjust") +
+  ggplot2::theme(text = ggplot2::element_text(size = 10))
+
+#emapplot_cluster(brain_genes_pathway2, showCategory = 4,  color = "p.adjust", vertex.label.font=16, vertex.label.cex=0.5, cex_label_category=1, cex_lab_gene=0.6, repel=TRUE, circular = TRUE, colorEdge = TRUE)
+emapplot_cluster(brain_genes_pathway2, showCategory = 20,  color = "p.adjust", vertex.label.font=16, vertex.label.cex=0.5, cex_label_category=1)
+
+brain_genes_pathway3 <- simplify(brain_genes_pathway2)
+#cnetplot(brain_genes_pathway3, showCategory = 4, foldChange=brain, vertex.label.font=6, vertex.label.cex=0.3, circular = TRUE, colorEdge = TRUE)
+
+#newscript
+#cnetplot(brain_genes_pathway3, showCategory = 4, color.params = list(foldChange = brain), cex.params = list(category_label = .6), cex.params = list(gene_label = .6), repel=TRUE, circular = TRUE, color.params = list(edge = brain))
+
+write.table(brain_genes_pathway3, sep='\t', file = '/Users/manga/Desktop/circular_SCZD_CNTRL/SCZDvCNTRL_c_GO.txt', row.names = FALSE)
+
+###Kegg enrichment
+
+genes <- read.table("permuted_all_combined.txt", header = FALSE, stringsAsFactors = FALSE)[[1]]
+
+# Map SYMBOLs to ENTREZIDs
+gene.df <- bitr(genes,
+                fromType = "SYMBOL",
+                toType = "ENTREZID",
+                OrgDb = org.Hs.eg.db)
+
+entrez_genes <- gene.df$ENTREZID
+kegg_results <- enrichKEGG(gene         = entrez_genes,
+                           organism     = 'hsa',
+                           pvalueCutoff = 0.5)
+dotplot(kegg_results, showCategory = 10)
+kegg_results <- pairwise_termsim(kegg_results)
+
+emapplot(kegg_results, showCategory = 10)
