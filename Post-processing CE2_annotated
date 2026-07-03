@@ -30,3 +30,7 @@ circRNA_ID      name    score   strand  thickStart      thickEnd        itemRgb 
 
 # adding the header.txt to the CE2_annotated files
 for f in /srv/scratch/DIR/STAR_aln_99/*/*_BSJ.txt; do outdir=$(dirname "$f"); base=$(basename "$f" _BSJ.txt); cat header.txt "$f" > "$outdir/${base}_BSJheader2.txt"; done
+
+### to find the number of circRNAs:
+wc -l */CE2_ann_*_circularRNA_known_FILT.txt | grep -v total
+# _known_FILT was used since the coordinates and format of BSJ aren't necessary for the count. 
