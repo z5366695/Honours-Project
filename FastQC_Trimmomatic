@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -N FastQC_Trimmomatic
+#PBS -l select=1:ncpus=1:mem=30gb,walltime=11:59:00 
+#PBS -j oe
+#PBS -M zID@unsw.edu.au
+#PBS -m ae
+#PBS -J 0-578
+
+PARAMS=(SCZD+CNTRL)
+
+module load fastqc
+
+cd /srv/scratch/DIR/FastQC_Trimm
+fastqc -t 19 /srv/scratch/DIR/Trimmomatic/${PARAMS[$PBS_ARRAY_INDEX]}_R1_001_paired.fastq.gz /srv/scratch/DIR/Trimmomatic/${PARAMS[$PBS_ARRAY_INDEX]}_R1_001_unpaired.fastq.gz /srv/scratch/DIR/Trimmomatic/${PARAMS[$PBS_ARRAY_INDEX]}_R2_001_paired.fastq.gz /srv/scratch/DIR/Trimmomatic/${PARAMS[$PBS_ARRAY_INDEX]}_R2_001_unpaired.fastq.gz -o /srv/scratch/DIR/FastQC_Trimm
