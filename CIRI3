@@ -25,3 +25,6 @@ for f in CIRI3_*.txt; do
     base=$(basename "$f" .txt)
     sed 's/|/-/g' "$f" > "/srv/scratch/z5366695/DLPFC/merge_files_SCZD/${base}_CIRI3new.txt"
 done
+
+### to find the number of circRNAs found:
+wc -l */CIRI3_*.txt | grep -v total
