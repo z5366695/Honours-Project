@@ -1,0 +1,32 @@
+# completed in directory, the previous files will not be replaced.
+
+# Filter for BSJ reads over 2.
+for f in /srv/scratch/DIR/STAR_aln_99/*/CE2_ann_*_circularRNA_known.txt; do (awk -F '\t' '$13 >= 2' "$f" > "${f%.txt}_FILT.txt"); done
+
+#check: 
+ls /srv/scratch/DIR/STAR_aln_99/*/CE2_ann_*_circularRNA_known_FILT.txt | wc -l
+#should have all present (526)
+
+# +1 to the start coordinate of the BSJ.
+for f in /srv/scratch/DIR/STAR_aln_99/*/CE2_ann_*_circularRNA_known_FILT.txt; do (awk '{$2+=1}1' OFS='\t' "$f" > "${f%.txt}_start.txt"); done
+
+#check:
+ls /srv/scratch/DIR/STAR_aln_99/*/CE2_ann_*_circularRNA_known_FILT_start.txt | wc -l
+
+# Create the BSJ coordinates. Combines 2 columns by using "-" as a separator.
+for f in /srv/scratch/DIR/STAR_aln_99/*/CE2_ann_*_circularRNA_known_FILT_start.txt; do outdir=$(dirname "$f"); base=$(basename "$f" _circularRNA_known_FILT_start.txt); sed 's/\t/-/2' "$f" > "$outdir/${base}_bsj.txt"; done
+
+#check:
+ls /srv/scratch/DIR/STAR_aln_99/*/*_bsj.txt | wc -l
+
+# Create the BSJ coordinates. Reads previously established coordinates' columns and uses ":" as a separator.
+for f in /srv/scratch/DIR/STAR_aln_99/*/*_bsj.txt; do outdir=$(dirname "$f"); base=$(basename "$f" _bsj.txt); sed 's/\t/:/1' "$f" > "$outdir/${base}_BSJ.txt"; done
+
+#check:
+ls /srv/scratch/DIR/STAR_aln_99/*/*_BSJ.txt | wc -l
+
+##### header.txt (tab separated)
+circRNA_ID      name    score   strand  thickStart      thickEnd        itemRgb exonCount       exonSizes       exonOffsets     readNumber      circType        geneName        isoformName     index   flankIntron
+
+# adding the header.txt to the CE2_annotated files
+for f in /srv/scratch/DIR/STAR_aln_99/*/*_BSJ.txt; do outdir=$(dirname "$f"); base=$(basename "$f" _BSJ.txt); cat header.txt "$f" > "$outdir/${base}_BSJheader2.txt"; done
