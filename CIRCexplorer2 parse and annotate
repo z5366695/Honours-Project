@@ -1,5 +1,7 @@
 #miniconda was required for the function to work
 
+# ! if the SCZD and CNTRL are done over 2 scripts and into different directories (i.e. SCZD / CNTRL), the number of circRNAs found per tool can be found !
+
 ##### CE2_parse #####
 #!/bin/bash
 #PBS -N CE_parse
