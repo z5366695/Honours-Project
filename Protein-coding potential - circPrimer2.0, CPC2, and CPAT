@@ -1,0 +1,34 @@
+# circPrimer2.0 was downloaded and functions as a desktop app. The genomic coordinates are input and it provides the sequence.
+# CPC2 <https://cpc2.gao-lab.org/> was used as a website. The FASTA files were produced from sequence in circPrimer2.0 - ">(geneID)_(g.coordinates) [ENTER] (seq.)".
+# CPAT was used in Katana. Script provided below. 
+# Protein-coding likelihood filtered in both CPC2 and CPAT. For those with protein-coding likelihood, CPC2 provides putative ORF sequence.
+# Images for putative ORFs generated in circPrimer2.0.
+
+##### CPAT SCRIPT #####
+# need to install CPAT:
+pip3 install CPAT
+
+# Made directories for all 10 DE circRNAs
+mkdir -p /srv/scratch/DIR/sig_circRNA/{(10_de_circRNAs} 
+
+# insert FASTA file for each parameter into its corresponding directory, made with the same name as the directories 
+# (i.e. if the directory is "U1_MIR31HG", the FASTA file is "U1_MIR31HG.fasta")
+
+# script is a PBS script
+
+#!/bin/bash
+#PBS -N cpat_circRNA
+#PBS -l select=1:ncpus=8,mem=100gb,walltime=4:00:00
+#PBS -j oe
+#PBS -m ae
+#PBS -M zID@unsw.edu.au
+#PBS -J 0-9
+ 
+PARAMS=(10_de_circRNAs)
+ 
+. /srv/scratch/DIR/miniconda/bin/activate
+cd /srv/scratch/DIR/sig_circRNA/
+module load r/4.4.0
+cpat -g /srv/scratch/DIR/sig_circRNA/${PARAMS[$PBS_ARRAY_INDEX]}/${PARAMS[$PBS_ARRAY_INDEX]}.fasta --antisense -d /srv/scratch/DIR/CPAT/Human_logitModel.RData -x /srv/scratch/DIR/CPAT/Human_Hexamer.tsv -o /srv/scratch/DIR/sig_circRNA/${PARAMS[$PBS_ARRAY_INDEX]}/cpat_${PARAMS[$PBS_ARRAY_INDEX]} --verbose
+
+# in: "/srv/scratch/DIR/CPAT/Human_logitModel.RData" the Human_logitModel.RData comes with the program.
