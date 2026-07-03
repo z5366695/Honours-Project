@@ -1,0 +1,45 @@
+##### needed to make the Rscript in Katana ("CIRCrna_merge.R")
+
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE) 
+
+#captures the command line arguments so that when the script is being run it ingores the (rscript) and only considers the params. Should mean args[1] is the sampleID later in the script.
+
+setwd("/srv/scratch/DIR/merge_files")
+
+if(length(args) < 1){
+  stop("Need sample ID")
+}
+#safety check - prevents failures since without it args[1] would be "NA" and looking for files with the name CE2_ann_"NA"_BSJheader2.txt etc.
+
+#extracting the sampleID as a clean string
+sampleID <- args[1]
+
+#constructing file names so it is the params (in a normal pbs script) but need to check there are no duplicate underscores, typos, syntax errors, etc. prior
+CEfile   <- paste0("CE2_ann_", sampleID, "_BSJheader2.txt")
+CIRIfile <- paste0("CIRI3_", sampleID, "_CIRI3new.txt")
+
+#sep="\t" tab separates
+CE   <- read.csv(CEfile, sep="\t", header=TRUE)
+CIRI <- read.csv(CIRIfile, sep="\t", header=TRUE)
+
+#merge function - only rows where circRNA_ID exists in both of the datasets will it combine them
+common <- merge(CE, CIRI, by="circRNA_ID")
+
+write.table(common,
+            file=paste0("common_circ_", sampleID, ".txt"),
+            sep="\t",
+            quote=FALSE,
+            row.names=FALSE)
+
+
+##### to run the script in Katana #####
+
+for f in CE2_ann_*_BSJheader2.txt
+do
+    id=$(echo "$f" | sed 's/CE2_ann_//' | sed 's/_BSJheader2.txt//')
+    Rscript CIRCrna_merge_S.R "$id"
+done
+
+##### to generate the averages of identified circRNAs at the end of the common_files #####
+for f in common_circ_*.txt; do out="${f%.txt}_withAvg.txt"; awk 'BEGIN{OFS="\t"} NR==1{print $0,"avg_read_Xjunction"; next} {print $0, ($11+$20)/2}' "$f" > "$out"; done
