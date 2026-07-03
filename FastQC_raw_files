@@ -1,5 +1,6 @@
 ### FastQC of raw files
 
+#!/bin/bash
 #PBS -N FastQC_initial 
 #PBS -l select=1:ncpus=1:mem=30gb,walltime=11:59:00  
 #PBS -j oe 
