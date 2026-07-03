@@ -1,0 +1,15 @@
+#!/bin/bash 
+#PBS -N BWA_MEM
+#PBS -l select=1:ncpus=16,mem=100gb,walltime=11:59:00
+#PBS -j oe 
+#PBS -m ae 
+#PBS -M zID@unsw.edu.au
+#PBS -J 0-578
+
+PARAMS=(SCZD+CNTRL)
+
+cd /srv/scratch/DIR/BWAMEM
+
+module load bwa/0.7.17
+
+bwa mem -T 19 /srv/scratch/DIR/homo_sapiens/Homo_sapiens/UCSC/hg38/Sequence/BWAIndex/genome.fa /srv/scratch/DIR/Trimmomatic/${PARAMS[$PBS_ARRAY_INDEX]}_R1_001_paired.fastq.gz /srv/scratch/DIR/Trimmomatic/${PARAMS[$PBS_ARRAY_INDEX]}_R2_001_paired.fastq.gz 1>BWA_${PARAMS[$PBS_ARRAY_INDEX]}.sam 2>BWA_${PARAMS[$PBS_ARRAY_INDEX]}.log
