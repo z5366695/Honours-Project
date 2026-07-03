@@ -14,3 +14,12 @@ PARAMS=(SCZD+CNTRL)
 cd /srv/scratch/DIR/CIRI3
 
 java -jar /srv/scratch/DIR/ciri3/CIRI3/CIRI3_Java_1.8.0.jar -I /srv/scratch/DIR/BWAMEM/BWA_${PARAMS[$PBS_ARRAY_INDEX]}.sam --out /srv/scratch/DIR/CIRI3/CIRI3_${PARAMS[$PBS_ARRAY_INDEX]}.txt -F /srv/scratch/DIR/Homo_sapiens/UCSC/hg38/Sequence/BWAIndex/genome.fa -A /srv/scratch/DIR/gencode.v49.annotation.gtf
+
+
+# in the directory, once the files are generated:
+# removing "|" and replacing it with the "-" between the first 2 columns.
+for f in CIRI3_*.txt; do
+    outdir=$(dirname "$f")
+    base=$(basename "$f" .txt)
+    sed 's/|/-/g' "$f" > "/srv/scratch/z5366695/DLPFC/merge_files_SCZD/${base}_CIRI3new.txt"
+done
