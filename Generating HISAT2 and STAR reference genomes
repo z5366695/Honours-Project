@@ -1,0 +1,32 @@
+# wget the UCSC genome: <https://hgdownload.gi.ucsc.edu/goldenPath/hg38/bigZips/>
+
+##### HISAT2 INDEX #####
+#!/bin/bash
+#PBS -N Hisatindex
+#PBS -l select=1:ncpus=16:mem=40gb
+#PBS -l walltime=11:59:00
+#PBS -j oe
+#PBS -M zID@unsw.edu.au
+#PBS -m ae
+
+cd /srv/scratch/DIR/HISAT2_index
+
+module load python/2.7.18
+
+module load hisat2/2.2.1
+
+hisat2-build -f /srv/scratch/DIR/homo_sapiens/Homo_sapiens/UCSC/hg38/Sequence/WholeGenomeFasta/genome.fa UCSC_hg38
+
+
+##### STAR INDEX #####
+#!/bin/bash
+#PBS -N STARINDEX
+#PBS -l select=1:ncpus=16:mem=100gb
+#PBS -l walltime=23:59:00
+#PBS -j oe
+#PBS -M zID@unsw.edu.au
+#PBS -m ae
+
+module load star/2.7.9a
+
+STAR --runThreadN 16 --runMode genomeGenerate --genomeDir /srv/scratch/DIR/STAR_index --genomeFastaFiles /srv/scratch/DIR/homo_sapiens/Homo_sapiens/UCSC/hg38/Sequence/WholeGenomeFasta/genome.fa
