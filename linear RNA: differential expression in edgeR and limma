@@ -1,0 +1,97 @@
+### DE done on a personal device rather than Katana on Demand
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("limma")
+BiocManager::install("edgeR")
+
+setwd("C:/Users/path/Desktop/linear_SCZD_CNTRL")
+
+rawdata  <-  read.delim("gene_count_matrix.csv", row.names = 'gene_id', header = T, stringsAsFactors = F, sep = ',') 
+rawdata 
+dim(rawdata) 
+library(limma)
+library("edgeR")
+dx <- DGEList(counts = rawdata)
+dim(dx)
+
+# Removing the "_stringtie_eB":
+colnames(rawdata) <- gsub("_stringtie_eB", "", colnames(rawdata))
+print(tail(colnames(rawdata)))
+
+# Sorting out the data into control / sczd:
+sczd_files <- readLines('sczd_list.txt') # need to have the SCZD parameters listed
+control_files <- readLines('cntrl_list.txt') # need to have the CNTRL parameters listed
+print(head(sczd_files))
+print(head(control_files))
+
+# Getting the gene counts of the data
+sczd_gene_counts <- rawdata[, colnames(rawdata) %in% sczd_files] 
+control_gene_counts <- rawdata[, colnames(rawdata) %in% control_files] 
+combined_gene_counts <- cbind(sczd_gene_counts, control_gene_counts)
+
+# Sorted the data out to have the SCZD and the CNTRL parameters
+colnames(combined_gene_counts) <- c(colnames(sczd_gene_counts), colnames(control_gene_counts))
+
+dx <- DGEList(counts = combined_gene_counts)
+dim(dx)
+
+# Define group as factor (SCZD or CNTRL) 
+group <- as.factor(c(rep('SCZD', 170),                      rep('Control', 356))) 
+group
+
+# Assign group and library sizes from external file 
+dx$samples$group <- group # the dx is the DGElist made earlier
+keep <- filterByExpr(dx, group = group) 
+dx <- dx[keep, , keep.lib.sizes = FALSE]
+
+# Safety check: groups matching samples
+stopifnot(length(group) ==ncol(dx))
+dx$samples$group<-group
+
+# Filtering out lowly expressed reads
+dx_keep <- rowSums(cpm(dx)>0.1) >=2
+
+# New DGElist with highly expressed reads
+dx_filtered <- dx[dx_keep,]
+
+# Normalisation 
+dx_filtered <- calcNormFactors(dx_filtered, method="TMM")
+design <- model.matrix(~0+group)
+colnames(design) <- gsub("group", "", colnames(design))
+design
+dim(dx_filtered)
+
+xcpm <- cpm(dx)
+
+xcpm
+xcpm <- cpm(dx_filtered)
+write.table(xcpm, file="C:/Users/path/Desktop/linear_SCZD_CNTRL/SCZDvsCNTRL_genes_cpm.txt", sep="\t")
+write.table(dx_filtered$counts, file="C:/Users/path/Desktop/linear_SCZD_CNTRL/SCZD_vs_CNTRL_genes_counts_filtered.txt", sep = "\t")
+
+# Set up differential expression, had to change to sample and control (A and B)
+contr.matrix <- makeContrasts(
+  BvsA = SCZD-Control,
+  levels = colnames(design))
+
+# Linear fit to model
+v <- voom(dx_filtered, design)
+vfit <- lmFit(v, design)
+vfit <- contrasts.fit(vfit, contrasts=contr.matrix)
+
+# Bayesian statistics
+efit <- eBayes(vfit)
+
+# Shows which genes are differentially expressed
+summary(decideTests(efit))
+
+# Make a list of top hits (all)
+BvsA <- topTable(efit, coef = 1, n=Inf)
+
+# Make a list of those significantly differentially expressed
+BvsAsignificant <- BvsA[BvsA$adj.P.Val < 0.05, ]
+
+# write output to file
+write.table(BvsA, file="./SCZDvsCNTRL_genes_BvsA.txt", sep = "\t")
+write.table(BvsAsignificant, file="./SCZD_vs_CNTRL_genes_SIG_BvsA.txt", sep = "\t")
+write.table(dx$counts, file="C:/Users/manga/Desktop/linear_SCZD_CNTRL/SCZD_vs_CNTRL_genes_counts.txt", sep = "\t")
