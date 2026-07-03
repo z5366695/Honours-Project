@@ -1,5 +1,7 @@
 ##### needed to make the Rscript in Katana ("CIRCrna_merge.R")
 
+# ! to find the circRNA count of either SCZD or CNTRL, the merged outputs need to be in their own directories !
+
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE) 
 
@@ -43,3 +45,6 @@ done
 
 ##### to generate the averages of identified circRNAs at the end of the common_files #####
 for f in common_circ_*.txt; do out="${f%.txt}_withAvg.txt"; awk 'BEGIN{OFS="\t"} NR==1{print $0,"avg_read_Xjunction"; next} {print $0, ($11+$20)/2}' "$f" > "$out"; done
+
+### to find the number of circRNAs:
+wc -l */common_circ_*.txt | grep -v total
