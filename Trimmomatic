@@ -1,0 +1,15 @@
+#!/bin/bash
+#PBS -N Trimmomatic_test
+#PBS -l select=1:ncpus=16:mem=60gb,walltime=11:59:00
+#PBS -j oe
+#PBS -M zID@unsw.edu.au
+#PBS -m ae
+#PBS -J 0-578
+
+PARAMS=(SCZD+CNTRL)
+
+cd /srv/scratch/DIR/Trimmomatic
+
+module load trimmomatic/0.39
+
+trimmomatic PE /srv/scratch/DIR/rawfiles/${PARAMS[$PBS_ARRAY_INDEX]}_R1_001.fastq.gz /srv/scratch/DIR/rawfiles/${PARAMS[$PBS_ARRAY_INDEX]}_R2_001.fastq.gz /srv/scratch/DIR/Trimmomatic/${PARAMS[$PBS_ARRAY_INDEX]}_R1_001_paired.fastq.gz /srv/scratch/DIR/Trimmomatic/${PARAMS[$PBS_ARRAY_INDEX]}_R1_001_unpaired.fastq.gz /srv/scratch/DIR/Trimmomatic/${PARAMS[$PBS_ARRAY_INDEX]}_R2_001_paired.fastq.gz /srv/scratch/DIR/Trimmomatic/${PARAMS[$PBS_ARRAY_INDEX]}_R2_001_unpaired.fastq.gz ILLUMINACLIP:/apps/trimmomatic/0.39/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
