@@ -1,0 +1,134 @@
+##### completed in Katana on Demand
+
+if (!requireNamespace("BiocManager", quietly = TRUE)) 
+  install.packages("BiocManager")
+BiocManager::install("limma")
+BiocManager::install("edgeR")
+library(limma)
+library(edgeR)
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install(c("limma", "edgeR"), force = TRUE)
+
+#####################################
+#### MAKING THE FILE LIST ###########
+#####################################
+
+# set the current directory to direcytory with files
+setwd("/srv/scratch/DIR/all_merge_wavg")
+
+#only files with "common" is picked up
+files <- list.files(pattern = "^common_.*\\_withAvg.txt$")
+files
+
+#sorting the data out
+sczd_files <- readLines('SCZD_list.txt') # need to make a list with all the SCZD parameters 
+control_files <- readLines('CNTRL_list.txt') # need to make a list with all the CNTRL parameters
+print(head(sczd_files)) #check
+print(head(control_files)) #check
+
+#organising the data without a matrix
+files <- list.files(pattern = "^common_.*\\_withAvg.txt$")
+sczd_files <- readLines("SCZD_list.txt")
+control_files <- readLines("CNTRL_list.txt")
+
+# Keep only matching files
+sczd_organised <- files[files %in% sczd_files]
+control_organised <- files[files %in% control_files]
+
+# Combine files
+combined_files <- c(sczd_organised, control_organised)
+combined_files
+
+#####################################
+######### R SCRIPT ##################
+#####################################
+
+# Make a DGElist 
+x <- readDGE(files, columns=c(1, 29), row.names(FALSE)) 
+# reading col(1) since it has the genomic coordinates, col(29) has the average circRNA count - check which column is avg
+
+# Define group as factor (sczd or control) 
+group <- as.factor(c(rep('SCZD', 170),                      rep('Control', 356))) 
+group
+
+# add group information to DGElist
+x$samples$group <- group
+
+# reading library sizes
+lib_sizes <- readLines("libsize.txt") #libsize.txt has the unique alignment reads sequence numbers (from STAR alignment)
+lib_sizes <- as.numeric(lib_sizes)
+x$samples$lib.size <- lib_sizes
+
+# filtering - check against potential issue - code functioned afterwards
+x_filtered$samples$lib.size
+
+# filtering out lowly expressed reads
+dx_keep <- rowSums(cpm(x)>0.1) >=2
+
+# new DGElist with highly expressed reads
+dx_filtered <- x[dx_keep,]
+
+# Normalisation 
+dx_filtered <- calcNormFactors(dx_filtered, method="TMM")
+design <- model.matrix(~0+group)
+colnames(design) <- gsub("group", "", colnames(design))
+design
+dim(dx_filtered)
+
+xcpm <- cpm(x)
+xcpm
+
+##### trouble shooting DE #####
+# xcpm <- cpm(dx_filtered)
+# xcpm   ###all the values were around 0.(x)
+
+# cpm_with_log2 = cpm(x, log=T, prior.count=1)
+# cpm_with_log2   ###CPM had negative values
+###############################
+
+# Set up differential expression
+contr.matrix <- makeContrasts(
+  AvsB = SCZD - Control,
+  levels = colnames(design))
+
+# Linear fit to model
+v <- voom(x_filtered, design)
+vfit <- lmFit(v, design)
+vfit <- contrasts.fit(vfit, contrasts=contr.matrix)
+
+# Bayesian statistics
+efit <- eBayes(vfit)
+
+# Shows which genes are differentially expressed
+summary(decideTests(efit))
+
+# Make a list of top hits
+AvsB <- topTable(efit, coef = 1, n=Inf)
+
+# make a list of those significantly differentially expressed
+AvsBsignificant <- AvsB[AvsB$adj.P.Val < 0.1, ]
+
+# write output to file
+write.table(AvsB, file="./SCZDvsCNTRL_AvsB.txt", sep = "\t")
+write.table(AvsBsignificant, file="./SCZDvsCNTRL_SIG_AvsB.txt", sep = "\t")
+write.table(x$counts, file="./SCZDvsCNTRL_AvsB_counts.txt", sep = "\t")
+
+##### Removing the ".txt" from header in output for cpm.
+
+#there's ".txt" in control_files
+control_files1 <- trimws(sub("\\.txt$", "", control_files))
+control_files1
+control_o <- colnames(xcpm)[colnames(xcpm) %in% control_files1]
+#same w/ SCZD
+sczd_files1 <- trimws(sub("\\.txt$", "", sczd_files))
+sczd_1  <- colnames(xcpm)[colnames(xcpm) %in% sczd_files1]
+controls_1 <- colnames(xcpm)[colnames(xcpm) %in% control_files1]
+ordered_cols <- c(sczd_1, controls_1)
+xcpm <- xcpm[, ordered_cols, drop = FALSE]
+write.table(xcpm, file="./SCZDvCNTRL_cpm_ordered.txt", sep = "\t")
+
+#load("./edgeR_differential_gene_expression")
+#save.image("./edgeR_differential_gene_expression")
