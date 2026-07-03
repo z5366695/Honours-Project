@@ -1,0 +1,191 @@
+# done on personal device once downloaded from Katana (using FileZilla)
+
+########## CIRCRNA
+install.packages('BiocManager')
+BiocManager::install('limma', force = TRUE)
+BiocManager::install('edgeR')
+BiocManager::install('ggplot2', force = TRUE)
+BiocManager::install('dplyr', force = TRUE)
+BiocManager::install('tidyverse', force = TRUE)
+library(limma)
+library(edgeR)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+
+# 3 section volcano # not used in final version of project
+
+setwd("/Users/path/Desktop/circular_SCZD_CNTRL")
+SCZDvsCONTROL <- read.csv(file = "SCZDvsCNTRL_AvsB.txt", sep = '\t', header = TRUE)
+
+#changed p-value to avg generated from sig_avb
+SCZDvsCONTROL <- SCZDvsCONTROL%>%
+  mutate(gene_type = case_when(logFC > 0 & adj.P.Val <= 0.1 ~ "up",
+                               logFC < 0 & adj.P.Val <= 0.1 ~ "down",
+                               adj.P.Val >0.1 ~ "ns"))
+
+
+SCZDvsCONTROLk1 <- SCZDvsCONTROL%>%
+  mutate(gene_type = case_when(logFC > 0 & adj.P.Val <= 0.1 ~ "up",
+                               logFC < 0 & adj.P.Val <= 0.1 ~ "down",
+                               adj.P.Val >0.1 ~ "ns"))
+# switched to p.val 0.1 since in the DE the cut off was 0.1 in DE script
+
+# To generate a volcano plot with 3 sections (upregulated, downregulated, and nonsignficant)
+Volcano_CIRC1aK1 <- as.data.frame(SCZDvsCONTROLk1) %>%
+  ggplot(aes(x = logFC,
+             y = -log10(adj.P.Val), #re-did but changed to "adj.P.Val", used to be "P.Value"
+             col = gene_type)) +
+  geom_point(size = 1,
+             alpha = 0.6) +
+  theme_minimal() +
+  scale_color_manual(values=c( "blue1", "grey45", "red2")) +
+  labs(title = "Differential expression analysis of circRNA")
+Volcano_CIRC1aK1
+
+volcano_CIRC_vK1 <- Volcano_CIRC1aK1 +
+  geom_hline(yintercept = -log10(0.1),
+             linetype = "dashed",
+             color = "grey40") +
+  geom_vline(xintercept = c(log2(0.5), log2(2)),
+             linetype = "dashed",
+             color = "grey40") + 
+  labs(title = "Differential expression analysis of circRNA",
+       x = "log2(Fold Change)",
+       y = "-log10(adj-P-value)",
+       colour = "Expression \nchange") +
+  theme_bw() + # Select theme with a white background
+  scale_x_continuous(breaks = c(seq(-3, 3, 2)), # Modify x-axis tick intervals
+                     limits = c(-1.5, 1.5)) #JOVANA: changed from c(-3. 3) so it looks a bit nicer?
+volcano_CIRC_vK1
+
+###
+
+# 4 section volcano plot # used in final version of the project
+
+SCZDvsCONTROLe <- read.csv(file = "SCZDvsCNTRL_AvsB.txt", sep = '\t', header = TRUE)
+
+fc_cutoff <- 1 ### too stringent, no values surpassed.
+SCZDvsCONTROLe <- SCZDvsCONTROLe%>%
+  mutate(gene_type = case_when(logFC >= fc_cutoff & adj.P.Val <= 0.038478149 ~ "up",
+                               logFC <= -fc_cutoff & adj.P.Val <= 0.038478149 ~ "down",
+                               abs(logFC) <= fc_cutoff & adj.P.Val <= 0.038478149 ~ "sig_small_FC",
+                               TRUE ~ "ns"))
+table(SCZDvsCONTROLe$gene_type)
+
+# checked the code again, and since I filtered for 0.1 I'll try it again see if anything changes
+SCZDvsCONTROLe <- SCZDvsCONTROLe%>%
+  mutate(gene_type = case_when(logFC >= fc_cutoff & adj.P.Val <= 0.1 ~ "up",
+                               logFC <= -fc_cutoff & adj.P.Val <= 0.1 ~ "down",
+                               abs(logFC) <= fc_cutoff & adj.P.Val <= 0.1 ~ "sig_small_FC",
+                               TRUE ~ "ns"))
+table(SCZDvsCONTROLe$gene_type)
+#^no just extended the sig_small_FC
+
+#changing fc-cutoff:
+fc_cutoff <- 0.5
+SCZDvsCONTROLe <- SCZDvsCONTROLe%>%
+  mutate(gene_type = case_when(logFC >= fc_cutoff & adj.P.Val <= 0.008044921 ~ "up",
+                               logFC <= -fc_cutoff & adj.P.Val <= 0.008044921 ~ "down",
+                               abs(logFC) <= fc_cutoff & adj.P.Val <= 0.008044921 ~ "sig_small_FC",
+                               TRUE ~ "ns"))
+table(SCZDvsCONTROLe$gene_type)
+
+# O.5 CUT OFF, can be interchangeable
+
+volcano_circKr1 <- as.data.frame(SCZDvsCONTROLe) %>%
+  ggplot(aes(x = logFC,
+             y = -log10(adj.P.Val),
+             col = gene_type)) +
+  geom_point() +
+  geom_point(size = 1,
+             alpha = 0.6) +
+  geom_vline(xintercept = c(-fc_cutoff, fc_cutoff),
+             linetype = "dashed") +
+  theme_minimal() +
+  scale_color_manual(values=c( "blue1", "#00AFBB", "grey45", "red2")) +
+  labs(title = "Differential expression analysis of circRNA")
+volcano_circKr1
+
+volcano_circfinal_Kr1 <- volcano_circKr1 +
+  geom_hline(yintercept = -log10(0.008044921),
+             linetype = "dashed",
+             color = "grey40") +
+  geom_vline(xintercept = c(-fc_cutoff, fc_cutoff),
+             linetype = "dashed",
+             color = "grey40") + 
+  labs(title = "Differential expression analysis of circRNA",
+       x = "log2(Fold Change)",
+       y = "-log10(adj-P-value)",
+       colour = "Expression \nchange") +
+  theme_bw() + # Select theme with a white background
+  scale_x_continuous(breaks = c(seq(-3, 3, 2)), # Modify x-axis tick intervals
+                     limits = c(-2, 2)) #changed scale to make less compact 
+volcano_circfinal_Kr1
+
+#########################################################################################
+
+########## LINEAR RNA
+install.packages('BiocManager')
+BiocManager::install('limma', force = TRUE)
+BiocManager::install('edgeR')
+BiocManager::install('ggplot2', force = TRUE)
+BiocManager::install('dplyr', force = TRUE)
+BiocManager::install('tidyverse', force = TRUE)
+library(limma)
+library(edgeR)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+
+##Volcano plots
+setwd("/Users/manga/Desktop/linear_SCZD_CNTRL")
+SCZDvsCONTROL_lin <- read.csv(file = "SCZDvsCNTRL_genes_BvsA_new.txt", sep = '\t', header = TRUE)
+
+SCZDvsCONTROL_lin <- SCZDvsCONTROL_lin%>%
+  mutate(gene_type = case_when(logFC > 0 & adj.P.Val <= 0.038478149 ~ "up",
+                               logFC < 0 & adj.P.Val <= 0.038478149 ~ "down",
+                               TRUE ~ "ns"))
+
+fc_cutoff <- 1 # to show doubled gene expression
+
+SCZDvsCONTROL_lin1 <- SCZDvsCONTROL_lin%>%
+  mutate(gene_type = case_when(logFC >= fc_cutoff & adj.P.Val <= 0.038478149 ~ "up",
+                               logFC <= -fc_cutoff & adj.P.Val <= 0.038478149 ~ "down",
+                               abs(logFC) <= fc_cutoff & adj.P.Val <= 0.038478149 ~ "sig_small_FC", #chat
+                               TRUE ~ "ns"))
+
+## check the number of categories
+table(SCZDvsCONTROL_lin1$gene_type)
+
+### even though it says adj.P.value and I used the average from all files (BvsA), the code has cpm keep 0.1 in DE
+
+volcano_lin1 <- as.data.frame(SCZDvsCONTROL_lin1) %>%
+  ggplot(aes(x = logFC,
+             y = -log10(adj.P.Val),
+             col = gene_type)) +
+  geom_point() +
+  geom_point(size = 1,
+             alpha = 0.6) +
+  geom_vline(xintercept = c(-fc_cutoff, fc_cutoff),
+             linetype = "dashed") +
+  theme_minimal() +
+  scale_color_manual(values=c( "blue1", "#00AFBB", "grey45", "red2")) +
+  labs(title = "Differential expression analysis of linear RNA")
+volcano_lin1
+
+volcano_lin_final1 <- volcano_lin1 +
+  geom_hline(yintercept = -log10(0.038478149),
+             linetype = "dashed",
+             color = "grey40") +
+  geom_vline(xintercept = c(log2(0.5), log2(2)), #<--might need to change
+             linetype = "dashed",
+             color = "grey40") + 
+  labs(title = "Differential expression analysis of linear RNA",
+       x = "log2(Fold Change)",
+       y = "-log10(adj-P-value)",
+       colour = "Expression \nchange") +
+  theme_bw() + # Select theme with a white background
+  scale_x_continuous(breaks = c(seq(-3, 3, 2)), # Modify x-axis tick intervals
+                     limits = c(-3, 3)) #changed scale to fit all  
+volcano_lin_final1
