@@ -1,5 +1,7 @@
 # can wget CIRI3 from Zheng et al.'s (2025) paper
 
+# ! if the SCZD and CNTRL are done separately and into different directories, the number of circRNAs found per tool can be found !
+
 #!/bin/bash
 #PBS -N CIRI3
 #PBS -l select=1:ncpus=16:mem=60gb
