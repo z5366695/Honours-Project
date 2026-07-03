@@ -1,0 +1,16 @@
+# can wget CIRI3 from Zheng et al.'s (2025) paper
+
+#!/bin/bash
+#PBS -N CIRI3
+#PBS -l select=1:ncpus=16:mem=60gb
+#PBS -l walltime=11:59:00 
+#PBS -j oe
+#PBS -M zID@unsw.edu.au 
+#PBS -m ae
+#PBS -J 0-526
+
+PARAMS=(SCZD+CNTRL)
+
+cd /srv/scratch/DIR/CIRI3
+
+java -jar /srv/scratch/DIR/ciri3/CIRI3/CIRI3_Java_1.8.0.jar -I /srv/scratch/DIR/BWAMEM/BWA_${PARAMS[$PBS_ARRAY_INDEX]}.sam --out /srv/scratch/DIR/CIRI3/CIRI3_${PARAMS[$PBS_ARRAY_INDEX]}.txt -F /srv/scratch/DIR/Homo_sapiens/UCSC/hg38/Sequence/BWAIndex/genome.fa -A /srv/scratch/DIR/gencode.v49.annotation.gtf
