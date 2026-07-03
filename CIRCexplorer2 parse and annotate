@@ -1,0 +1,39 @@
+#miniconda was required for the function to work
+
+##### CE2_parse #####
+#!/bin/bash
+#PBS -N CE_parse
+#PBS -l ncpus=1
+#PBS -l mem=40gb
+#PBS -l walltime=11:59:00 
+#PBS -j oe
+#PBS -M zID@unsw.edu.au 
+#PBS -m ae
+#PBS -J 0-578
+
+PARAMS=(SCZD+CNTRL)
+
+. /srv/scratch/DIR/miniconda/bin/activate
+ 
+cd /srv/scratch/DIR/STAR_alignment/${PARAMS[$PBS_ARRAY_INDEX]}
+ 
+CIRCexplorer2 parse -t STAR /srv/scratch/DIR/STAR_alignment/${PARAMS[$PBS_ARRAY_INDEX]}_StarChimeric.out.junction > ${PARAMS[$PBS_ARRAY_INDEX]}_parse.log
+
+
+##### CE2 annotated #####
+#!/bin/bash
+#PBS -N CE2_ann
+#PBS -l select=1:ncpus=16:mem=50gb
+#PBS -l walltime=11:59:00 
+#PBS -j oe
+#PBS -M zID@unsw.edu.au 
+#PBS -m ae
+#PBS -J 0-578
+
+PARAMS=(SCZD+CNTRL)
+
+. /srv/scratch/DIR/miniconda/bin/activate
+ 
+cd /srv/scratch/DIR/STAR_alignment/${PARAMS[$PBS_ARRAY_INDEX]}
+ 
+CIRCexplorer2 annotate -r /srv/scratch/DIR/hg38/hg38_ref_all.txt -g /srv/scratch/DIR/homo_sapiens/Homo_sapiens/UCSC/hg38/Sequence/WholeGenomeFasta/genome.fa -b ./back_spliced_junction.bed -o CE2_ann_${PARAMS[$PBS_ARRAY_INDEX]}_circularRNA_known.txt > CE2_ann_${PARAMS[$PBS_ARRAY_INDEX]}.log
