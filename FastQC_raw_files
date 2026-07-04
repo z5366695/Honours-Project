@@ -13,4 +13,4 @@ PARAMS=(SCZD+CNTRL)
 module load fastqc 
  
 cd /srv/scratch/DIR/FastQC
-fastqc -t 19 /srv/scratch/DIR/FILE/${PARAMS[$PBS_ARRAY_INDEX]}_001.fastq.gz -o /srv/scratch/DIR/FastQC
+fastqc -t 19 /srv/scratch/DIR/rawfiles/${PARAMS[$PBS_ARRAY_INDEX]}_001.fastq.gz -o /srv/scratch/DIR/FastQC
