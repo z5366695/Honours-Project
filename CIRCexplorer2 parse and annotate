@@ -17,9 +17,9 @@ PARAMS=(SCZD+CNTRL)
 
 . /srv/scratch/DIR/miniconda/bin/activate
  
-cd /srv/scratch/DIR/STAR_alignment/${PARAMS[$PBS_ARRAY_INDEX]}
+cd /srv/scratch/DIR/STAR_aln_99/${PARAMS[$PBS_ARRAY_INDEX]}
  
-CIRCexplorer2 parse -t STAR /srv/scratch/DIR/STAR_alignment/${PARAMS[$PBS_ARRAY_INDEX]}_StarChimeric.out.junction > ${PARAMS[$PBS_ARRAY_INDEX]}_parse.log
+CIRCexplorer2 parse -t STAR /srv/scratch/DIR/STAR_aln_99/${PARAMS[$PBS_ARRAY_INDEX]}_StarChimeric.out.junction > ${PARAMS[$PBS_ARRAY_INDEX]}_parse.log
 
 
 ##### CE2 annotated #####
@@ -36,6 +36,6 @@ PARAMS=(SCZD+CNTRL)
 
 . /srv/scratch/DIR/miniconda/bin/activate
  
-cd /srv/scratch/DIR/STAR_alignment/${PARAMS[$PBS_ARRAY_INDEX]}
+cd /srv/scratch/DIR/STAR_aln_99/${PARAMS[$PBS_ARRAY_INDEX]}
  
 CIRCexplorer2 annotate -r /srv/scratch/DIR/hg38/hg38_ref_all.txt -g /srv/scratch/DIR/homo_sapiens/Homo_sapiens/UCSC/hg38/Sequence/WholeGenomeFasta/genome.fa -b ./back_spliced_junction.bed -o CE2_ann_${PARAMS[$PBS_ARRAY_INDEX]}_circularRNA_known.txt > CE2_ann_${PARAMS[$PBS_ARRAY_INDEX]}.log
