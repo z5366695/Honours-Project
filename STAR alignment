@@ -1,5 +1,5 @@
 # need to make a directory for each parameter in the STAR directory (STAR_aln_99 in scripts)
-mkdir -p /srv/scratch/DIR/STAR_aln_99/{(SCZD+CNTRL} 
+mkdir -p /srv/scratch/DIR/STAR_aln_99/{SCZD+CNTRL} 
 
 #!/bin/bash
 #PBS -N STAR_Alignment
