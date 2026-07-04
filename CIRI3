@@ -23,7 +23,7 @@ java -jar /srv/scratch/DIR/ciri3/CIRI3/CIRI3_Java_1.8.0.jar -I /srv/scratch/DIR/
 for f in CIRI3_*.txt; do
     outdir=$(dirname "$f")
     base=$(basename "$f" .txt)
-    sed 's/|/-/g' "$f" > "/srv/scratch/z5366695/DLPFC/merge_files_SCZD/${base}_CIRI3new.txt"
+    sed 's/|/-/g' "$f" > "/srv/scratch/DIR/merge_files_SCZD/${base}_CIRI3new.txt"
 done
 
 ### to find the number of circRNAs found:
